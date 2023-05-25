@@ -72,26 +72,26 @@ class Fountain {
     params.parent.add(this.points)
 
     // alpha spline to control how the change in transparancy behaves
-    this._alphaSpline = new LinearSpline((t, a, b) => {
+    this.alphaSpline = new LinearSpline((t, a, b) => {
       return a + t * (b - a)
     });
-    this._alphaSpline.AddPoint(0.0, 0.0)
-    this._alphaSpline.AddPoint(1.0, 1.0)
+    this.alphaSpline.AddPoint(0.0, 0.0)
+    this.alphaSpline.AddPoint(1.0, 1.0)
 
     // colour spline to control how the change in colour behaves
-    this._colourSpline = new LinearSpline((t, a, b) => {
+    this.colourSpline = new LinearSpline((t, a, b) => {
       const c = a.clone()
       return c.lerp(b, t)
     });
-    this._colourSpline.AddPoint(0.0, new THREE.Color(0xBFE2FF))
-    this._colourSpline.AddPoint(1.0, new THREE.Color(0xFFFFFF))
+    this.colourSpline.AddPoint(0.0, new THREE.Color(0xBFE2FF))
+    this.colourSpline.AddPoint(1.0, new THREE.Color(0xFFFFFF))
 
     // size spline to control how the change in size behaves
-    this._sizeSpline = new LinearSpline((t, a, b) => {
+    this.sizeSpline = new LinearSpline((t, a, b) => {
       return a + t * (b - a);
     });
-    this._sizeSpline.AddPoint(0.0, 1.0)
-    this._sizeSpline.AddPoint(1.0, 5.0) // Change "5.0" to control spread (higher = more spread)
+    this.sizeSpline.AddPoint(0.0, 1.0)
+    this.sizeSpline.AddPoint(1.0, 5.0) // Change "5.0" to control spread (higher = more spread)
     this.UpdateGeometry()
   }
 
@@ -165,13 +165,17 @@ class Fountain {
     });
 
     for (let p of this.particles) {
+      // t = the current 'y' value to be used for the spline
       const t = 1.0 - p.life / p.maxLife
-
+      
       p.rotation += timeElapsed * 0.5
-      p.alpha = this._alphaSpline.Get(t)
-      p.currentSize = p.size * this._sizeSpline.Get(t)
-      p.colour.copy(this._colourSpline.Get(t))
+      
+      // updates each attribute using the splines declared
+      p.alpha = this.alphaSpline.Get(t)
+      p.currentSize = p.size * this.sizeSpline.Get(t)
+      p.colour.copy(this.colourSpline.Get(t))
 
+      // shoots the fountain up in the air
       p.position.add(p.velocity.clone().multiplyScalar(timeElapsed))
     }
 
