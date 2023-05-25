@@ -22,7 +22,7 @@ void main() {
 
   vAngle = vec2(cos(angle), sin(angle));
   vColour = colour;
-}`;
+}`
 
 const fragShader = `
 
@@ -34,7 +34,7 @@ varying vec2 vAngle;
 void main() {
   vec2 coords = (gl_PointCoord - 0.5) * mat2(vAngle.x, vAngle.y, -vAngle.y, vAngle.x) + 0.5;
   gl_FragColor = texture2D(diffuseTexture, coords) * vColour;
-}`;
+}`
 
 class Fountain {
   constructor(params) {
@@ -45,7 +45,7 @@ class Fountain {
       pointMultiplier: {
         value: window.innerHeight / (2.0 * Math.tan(0.5 * 60.0 * Math.PI / 180.0))
       }
-    };
+    }
 
     this.particleMat = new THREE.ShaderMaterial({
       uniforms: uniforms,
@@ -74,7 +74,7 @@ class Fountain {
     // alpha spline to control how the change in transparancy behaves
     this.alphaSpline = new LinearSpline((t, a, b) => {
       return a + t * (b - a)
-    });
+    })
     this.alphaSpline.AddPoint(0.0, 0.0)
     this.alphaSpline.AddPoint(1.0, 1.0)
 
@@ -82,14 +82,14 @@ class Fountain {
     this.colourSpline = new LinearSpline((t, a, b) => {
       const c = a.clone()
       return c.lerp(b, t)
-    });
+    })
     this.colourSpline.AddPoint(0.0, new THREE.Color(0xBFE2FF))
     this.colourSpline.AddPoint(1.0, new THREE.Color(0xFFFFFF))
 
     // size spline to control how the change in size behaves
     this.sizeSpline = new LinearSpline((t, a, b) => {
-      return a + t * (b - a);
-    });
+      return a + t * (b - a)
+    })
     this.sizeSpline.AddPoint(0.0, 1.0)
     this.sizeSpline.AddPoint(1.0, 5.0) // Change "5.0" to control spread (higher = more spread)
     this.UpdateGeometry()
@@ -162,7 +162,7 @@ class Fountain {
 
     this.particles = this.particles.filter(p => {
       return p.life > 0.0
-    });
+    })
 
     for (let p of this.particles) {
       // t = the current 'y' value to be used for the spline
@@ -186,14 +186,14 @@ class Fountain {
       const d2 = this.camera.position.distanceTo(b.position)
 
       if (d1 > d2) {
-        return -1;
+        return -1
       }
 
       if (d1 < d2) {
-        return 1;
+        return 1
       }
 
-      return 0;
+      return 0
     });
   }
 
