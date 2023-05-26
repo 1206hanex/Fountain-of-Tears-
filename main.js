@@ -7,7 +7,11 @@ let controls
 let scene
 let camera
 let renderer
-let fountain
+let fountain1
+let fountain2
+let fountain3
+let velocity = 10
+let spread = 5.0
 
 function Init() {
 	scene = new THREE.Scene()
@@ -32,9 +36,28 @@ function Init() {
 	const light = new THREE.AmbientLight(0x101010);
 	scene.add(light);
 
-	fountain = new Fountain({
-		parent: scene,
+	fountain1 = new Fountain({
+		scene: scene,
 		camera: camera,
+		velocity: velocity,
+		spread: spread,
+		positionX: 50,
+	})
+
+	fountain2 = new Fountain({
+		scene: scene,
+		camera: camera,
+		velocity: 20,
+		spread: 5.0,
+		positionX: 0,
+	})
+
+	fountain3 = new Fountain({
+		scene: scene,
+		camera: camera,
+		velocity: 15,
+		spread: 3.0,
+		positionX: -50,
 	})
 
 	renderer.render(scene, camera)
@@ -50,15 +73,17 @@ function Animate() {
 		Animate()
 
 		renderer.render(scene, camera)
-		step(t - prevAnimate)
+		animateFountain(t - prevAnimate)
 		prevAnimate = t
 	})
 }
 
-function step(timeElapsed) {
+function animateFountain(timeElapsed) {
 	const timeElapsedS = timeElapsed * 0.001
 
-	fountain.Step(timeElapsedS)
+	fountain1.Step(timeElapsedS)
+	fountain2.Step(timeElapsedS)
+	fountain3.Step(timeElapsedS)
 }
 
 Init()
