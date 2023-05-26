@@ -1,5 +1,5 @@
 /*
-The Fountain class is used to create a "fountain" using particle system
+The Fountain class is used to define a "fountain" using particle system
 */
 import * as THREE from 'three'
 import { LinearSpline } from './linearSpline'
@@ -45,8 +45,16 @@ class Fountain {
       pointMultiplier: {
         value: window.innerHeight / (2.0 * Math.tan(0.5 * 60.0 * Math.PI / 180.0))
       }
-    }
+    };
 
+    this.scene = params.scene
+    this.camera = params.camera
+    this.velocity = params.velocity
+    this.spread = params.spread
+    this.positionX = params.positionX
+    this.particles = []
+
+    // define the particle material using the ShaderMaterial
     this.particleMat = new THREE.ShaderMaterial({
       uniforms: uniforms,
       vertexShader: vertShader,
@@ -58,20 +66,22 @@ class Fountain {
       vertexColors: true
     })
 
-    this.camera = params.camera
-    this.particles = []
-
+    // create a buffer geometry for the particles
     this.particleGeo = new THREE.BufferGeometry()
+    
+    // initialse attributes for the buffer geometry
     this.particleGeo.setAttribute('position', new THREE.Float32BufferAttribute([], 3))
     this.particleGeo.setAttribute('size', new THREE.Float32BufferAttribute([], 1))
     this.particleGeo.setAttribute('colour', new THREE.Float32BufferAttribute([], 4))
     this.particleGeo.setAttribute('angle', new THREE.Float32BufferAttribute([], 1))
 
-    this.points = new THREE.Points(this.particleGeo, this.particleMat)
+    // create a points mesh for the water particles
+    this.water = new THREE.Points(this.particleGeo, this.particleMat)
 
-    params.parent.add(this.points)
+    // add particles to scene
+    this.scene.add(this.water)
 
-    // alpha spline to control how the change in transparancy behaves
+    // alpha spline to control how the change in transparency behaves
     this.alphaSpline = new LinearSpline((t, a, b) => {
       return a + t * (b - a)
     })
@@ -91,7 +101,7 @@ class Fountain {
       return a + t * (b - a)
     })
     this.sizeSpline.AddPoint(0.0, 1.0)
-    this.sizeSpline.AddPoint(1.0, 5.0) // Change "5.0" to control spread (higher = more spread)
+    this.sizeSpline.AddPoint(1.0, this.spread) // Change "5.0" to control spread (higher = more spread)
     this.UpdateGeometry()
   }
 
@@ -108,17 +118,14 @@ class Fountain {
     // particle definition
     for (let i = 0; i < num; i++) {
       this.particles.push({
-        position: new THREE.Vector3(
-          (Math.random() * 2 - 1) * 1.0,
-          (Math.random() * 2 - 1) * 1.0,
-          (Math.random() * 2 - 1) * 1.0),
+        position: new THREE.Vector3(this.positionX, 0, 0),
         size: (Math.random() * 0.5 + 0.5) * 4.0,
         colour: new THREE.Color(),
         alpha: 1.0,
         life: 5.0,
         maxLife: 5.0,
         rotation: Math.random() * 2.0 * Math.PI,
-        velocity: new THREE.Vector3(0, 10, 0),
+        velocity: new THREE.Vector3(0, this.velocity, 0),
       })
     }
   }
@@ -126,11 +133,13 @@ class Fountain {
   // assigns attributes to a particle
   // size, colour, transparency, rotation angle
   UpdateGeometry() {
+    // create an array for each attribute
     const positions = []
     const sizes = []
     const colours = []
     const angles = []
 
+    // assign each attribute to their designated arrays
     for (let p of this.particles) {
       positions.push(p.position.x, p.position.y, p.position.z)
       colours.push(p.colour.r, p.colour.g, p.colour.b, p.alpha)
@@ -138,14 +147,11 @@ class Fountain {
       angles.push(p.rotation)
     }
 
-    this.particleGeo.setAttribute(
-      'position', new THREE.Float32BufferAttribute(positions, 3))
-    this.particleGeo.setAttribute(
-      'size', new THREE.Float32BufferAttribute(sizes, 1))
-    this.particleGeo.setAttribute(
-      'colour', new THREE.Float32BufferAttribute(colours, 4))
-    this.particleGeo.setAttribute(
-      'angle', new THREE.Float32BufferAttribute(angles, 1))
+    // use the attribute arrays to define the particle's attributes
+    this.particleGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    this.particleGeo.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1))
+    this.particleGeo.setAttribute('colour', new THREE.Float32BufferAttribute(colours, 4))
+    this.particleGeo.setAttribute('angle', new THREE.Float32BufferAttribute(angles, 1))
 
     this.particleGeo.attributes.position.needsUpdate = true
     this.particleGeo.attributes.size.needsUpdate = true
@@ -162,20 +168,16 @@ class Fountain {
 
     this.particles = this.particles.filter(p => {
       return p.life > 0.0
-    })
+    });
 
     for (let p of this.particles) {
-      // t = the current 'y' value to be used for the spline
       const t = 1.0 - p.life / p.maxLife
-      
+
       p.rotation += timeElapsed * 0.5
-      
-      // updates each attribute using the splines declared
       p.alpha = this.alphaSpline.Get(t)
       p.currentSize = p.size * this.sizeSpline.Get(t)
       p.colour.copy(this.colourSpline.Get(t))
 
-      // shoots the fountain up in the air
       p.position.add(p.velocity.clone().multiplyScalar(timeElapsed))
     }
 
@@ -193,8 +195,8 @@ class Fountain {
         return 1
       }
 
-      return 0
-    });
+      return 0;
+    })
   }
 
   Step(timeElapsed) {
